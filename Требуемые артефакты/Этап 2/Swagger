@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: Sports Platform API
+  description: >
+    API спортивной платформы для тренировок, социальных взаимодействий,
+    телеметрии и интеграции с e-commerce приложением компании.
+  version: 1.0.0
+
+servers:
+  - url: https://api.sports-platform.com/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        sports:
+          type: array
+          items:
+            type: string
+
+    Training:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        durationMinutes:
+          type: integer
+        distanceKm:
+          type: number
+        calories:
+          type: integer
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        productId:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+
+paths:
+
+  /users/profile:
+    get:
+      summary: Получить профиль пользователя
+      responses:
+        "200":
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trainings/start:
+    post:
+      summary: Начать тренировку
+      responses:
+        "201":
+          description: Тренировка начата
+        "400":
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trainings/finish:
+    post:
+      summary: Завершить тренировку
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Training"
+      responses:
+        "200":
+          description: Тренировка завершена
+        "500":
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /recommendations:
+    get:
+      summary: Получить персональные рекомендации
+      responses:
+        "200":
+          description: Список рекомендаций
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+
+  /social/groups:
+    get:
+      summary: Получить группы по интересам
+      responses:
+        "200":
+          description: Список групп
+
+  /notifications:
+    get:
+      summary: Получить уведомления пользователя
+      responses:
+        "200":
+          description: Уведомления
+
+  /shop/redirect:
+    post:
+      summary: Бесшовный переход в магазин
+      description: >
+        Генерирует SSO-ссылку для перехода в e-commerce приложение компании
+      responses:
+        "302":
+          description: Redirect в магазин
+        "401":
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /telemetry:
+    post:
+      summary: Отправка телеметрии с устройств
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Телеметрия принята
